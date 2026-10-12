@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VLM Live-Demo</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="logo">👁️</span>
+    <div>
+      <h1>VLM Live-Demo</h1>
+      <div class="sub">Vision-Language-Modelle lokal auf der GPU</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <label class="model-select">
+      <span>Modell</span>
+      <select id="model"></select>
+    </label>
+    <div id="modelState" class="pill">…</div>
+    <div class="vram" title="GPU-Speicher (gesamt belegt / davon Modell)">
+      <div class="vram-label">VRAM <span id="vramText">–</span></div>
+      <div class="bar"><div id="vramBarAll"></div><div id="vramBarModel"></div></div>
+    </div>
+    <div class="conn" id="conn" title="Verbindung zum Server"></div>
+  </div>
+</header>
+
+<main>
+  <section class="stage">
+    <div class="video-wrap" id="videoWrap">
+      <img id="video" src="/video.mjpg" alt="Kamerabild">
+      <img id="frozen" alt="Analysiertes Bild" hidden>
+      <canvas id="overlay"></canvas>
+      <div class="hud top-left">
+        <span id="hudMode" class="tag">–</span>
+        <span id="hudTitle"></span>
+      </div>
+      <div class="hud top-right">
+        <span id="hudLatency" class="tag" title="Dauer der letzten Analyse">– ms</span>
+        <span id="hudRate" class="tag" title="Analysen pro Sekunde">– /s</span>
+      </div>
+      <div class="hud bottom-left" id="counts"></div>
+      <div class="watch-banner" id="watchBanner" hidden></div>
+      <div class="busy-dot" id="busyDot" title="Modell rechnet"></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnLive" class="primary">▶ Live starten</button>
+      <button id="btnOnce" title="Leertaste">📸 Einmal analysieren</button>
+      <button id="btnSnap" title="Aktuelles Bild mit Overlay speichern">💾 Schnappschuss</button>
+      <label class="toggle" title="Statt Livebild das Bild zeigen, das das Modell gesehen hat (Boxen passen exakt)">
+        <input type="checkbox" id="optFrozen"> Analysebild
+      </label>
+      <label class="toggle"><input type="checkbox" id="optSpeak"> 🔊 Vorlesen</label>
+      <label class="toggle"><input type="checkbox" id="optSound" checked> 🔔 Alarmton</label>
+    </div>
+
+    <details class="settings">
+      <summary>⚙️ Einstellungen</summary>
+      <div class="settings-grid">
+        <label>Kamera <select id="camera"></select></label>
+        <label class="toggle"><input type="checkbox" id="optMirror" checked> gespiegelt</label>
+        <label>Bildgröße fürs Modell
+          <select id="maxSide">
+            <option value="384">384 px (schnell)</option>
+            <option value="512">512 px</option>
+            <option value="640" selected>640 px</option>
+            <option value="896">896 px</option>
+            <option value="1280">1280 px (genau, langsam)</option>
+          </select>
+        </label>
+        <label>Pause zwischen Analysen <input type="range" id="interval" min="0" max="5" step="0.5" value="0"> <output id="intervalOut">0 s</output></label>
+      </div>
+    </details>
+  </section>
+
+  <aside class="panel">
+    <nav class="tabs" id="tabs">
+      <button data-mode="detect" class="active">🎯 Erkennen</button>
+      <button data-mode="ask">💬 Fragen</button>
+      <button data-mode="watch">🚨 Überwachen</button>
+    </nav>
+
+    <div class="presets" id="presets"></div>
+
+    <form class="custom" id="customForm" autocomplete="off">
+      <div class="custom-head">✏️ Eigener Prompt</div>
+      <div data-for="detect">
+        <input id="cClasses" placeholder="Klassen, kommagetrennt – z. B. person, cup, rote Schere">
+        <input id="cAttr" placeholder="optional: Ja/Nein-Frage pro Objekt – z. B. Is this person wearing glasses?">
+        <div class="row">
+          <input id="cYes" placeholder="Label bei Ja">
+          <input id="cNo" placeholder="Label bei Nein (optional)">
+        </div>
+      </div>
+      <div data-for="ask" hidden>
+        <textarea id="cAsk" rows="3" placeholder="Frag das Modell etwas über das Kamerabild …"></textarea>
+      </div>
+      <div data-for="watch" hidden>
+        <input id="cWatch" placeholder="Ja/Nein-Bedingung – z. B. Hält jemand eine Tasse?">
+      </div>
+      <div class="row">
+        <button type="submit" class="primary">Übernehmen &amp; analysieren ⏎</button>
+      </div>
+    </form>
+
+    <div class="result">
+      <div class="result-head">
+        <span>Ergebnis</span>
+        <span id="resultMeta" class="muted"></span>
+      </div>
+      <div id="answer" class="answer muted">Noch keine Analyse. Preset wählen und „Live starten“ oder Leertaste drücken.</div>
+      <details>
+        <summary>Rohausgabe des Modells</summary>
+        <pre id="raw"></pre>
+        <div class="muted small">Prompt: <span id="promptUsed"></span></div>
+      </details>
+    </div>
+
+    <div class="history">
+      <div class="result-head"><span>Verlauf</span><button id="btnClear" class="link">leeren</button></div>
+      <div id="historyList"></div>
+    </div>
+  </aside>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

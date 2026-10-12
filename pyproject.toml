@@ -1,0 +1,29 @@
+[project]
+name = "vlm-demo"
+version = "0.1.0"
+description = "Live-Webcam-Demo für Vision-Language-Modelle (Qwen3-VL, Moondream) mit Web-GUI"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.8",
+    "torchvision>=0.23",
+    "transformers>=4.57",
+    "accelerate>=1.10",
+    "bitsandbytes>=0.47",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "opencv-python-headless>=4.10",
+    "pillow>=10",
+    "numpy>=1.26",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
