@@ -76,3 +76,11 @@ braucht es außerdem eine `VLMBackend`-Unterklasse mit `load()`, `ask()` und `de
   Xet-Downloads ab, weil diese in diesem Netz abbrachen.
 - Der Remote-Code von Moondream ist nicht mit `from_pretrained()` aus transformers v5 kompatibel.
   `MoondreamBackend.load()` lädt die Gewichte deshalb selbst.
+
+## Modell-Cache
+
+Die Gewichte liegen dauerhaft unter `~/.cache/huggingface/hub/` (zusammen rund 16 GB) und werden nur
+beim ersten Start heruntergeladen. Liegen alle drei Modelle im Cache, startet `run.sh` im
+Offline-Modus (`HF_HUB_OFFLINE=1`). Dann gibt es keine Update-Abfragen bei Hugging Face, die
+Gewichte bleiben unverändert und die Demo läuft ohne Internet. Mit `VLM_ONLINE=1 ./run.sh` lässt
+sich der Online-Modus erzwingen, etwa für neu hinzugefügte Modelle.
