@@ -120,6 +120,9 @@ button.link { background: none; border: none; color: var(--accent); padding: 0; 
 .small { font-size: 11px; margin-top: 6px; }
 .answer { font-size: 16px; line-height: 1.5; min-height: 48px; white-space: pre-wrap; }
 .answer .cursor { display: inline-block; width: 8px; height: 1.1em; background: var(--accent); vertical-align: text-bottom; animation: blink .5s infinite alternate; }
+.answer.big-answer { font-size: 40px; font-weight: 700; line-height: 1.2; }
+.answer.changed { animation: changed 0.8s ease-out; }
+@keyframes changed { from { color: var(--accent); text-shadow: 0 0 16px var(--accent); } }
 .answer .big { font-size: 21px; font-weight: 700; line-height: 1.35; }
 details summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-top: 10px; }
 pre { background: var(--bg); border-radius: 8px; padding: 10px; font-size: 12px; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; }

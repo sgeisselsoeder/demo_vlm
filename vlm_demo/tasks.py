@@ -27,6 +27,8 @@ class Task(BaseModel):
     classes: list[DetectClass] = Field(default_factory=list)
     attribute: Attribute | None = None
     max_new_tokens: int = Field(default=200, ge=1, le=1024)
+    # Antwort live Token für Token anzeigen. Aus = Anzeige ändert sich nur, wenn sich die Antwort ändert
+    stream: bool = True
 
 
 class Preset(BaseModel):
@@ -85,7 +87,7 @@ PRESETS: list[Preset] = [
     _p("gesture", "✌️", mode="ask", title="Handgeste", max_new_tokens=40,
        prompt="Welche Handgeste zeigt die Person (z. B. Daumen hoch, Peace-Zeichen, Winken, Faust, OK)? Antworte kurz.",
        prompt_en="Which hand gesture is the person making (e.g. thumbs up, peace sign, waving, fist, OK)? Answer briefly."),
-    _p("fingers", "🔢", mode="ask", title="Finger zählen", max_new_tokens=10,
+    _p("fingers", "🔢", mode="ask", title="Finger zählen", max_new_tokens=10, stream=False,
        prompt="Wie viele Finger hält die Person insgesamt hoch? Antworte nur mit der Zahl.",
        prompt_en="How many fingers is the person holding up in total? Answer with a number only."),
     _p("ocr", "🔤", mode="ask", title="Text lesen (OCR)",

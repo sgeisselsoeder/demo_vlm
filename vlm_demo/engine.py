@@ -240,10 +240,11 @@ class Engine:
             res.update(boxes=items, counts=counts, raw=raw)
 
         elif task.mode == "ask":
-            self.hub.publish({"type": "stream_start", "title": task.title})
-            text = backend.ask(img, prompt, task.max_new_tokens,
-                               on_text=lambda s: self.hub.publish({"type": "token", "text": s}),
-                               should_stop=should_stop)
+            on_text = None
+            if task.stream:
+                self.hub.publish({"type": "stream_start", "title": task.title})
+                on_text = lambda s: self.hub.publish({"type": "token", "text": s})  # noqa: E731
+            text = backend.ask(img, prompt, task.max_new_tokens, on_text=on_text, should_stop=should_stop)
             res.update(text=text, raw=text)
 
         elif task.mode == "watch":

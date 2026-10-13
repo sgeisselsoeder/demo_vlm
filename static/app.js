@@ -129,12 +129,24 @@ function renderAnswer(r) {
   const a = $("answer");
   a.classList.remove("muted");
   if (r.mode === "ask") {
-    a.textContent = r.text || "(leere Antwort)";
+    const text = r.text || "(leere Antwort)";
+    // Nicht gestreamte Antworten (z. B. Finger zählen) nur bei Änderung neu schreiben
+    if (a.dataset.text !== text || a.dataset.mode !== "ask") {
+      a.textContent = text;
+      a.classList.toggle("big-answer", text.length <= 24);
+      if (state.status?.task?.stream === false) flash(a);
+    }
+    a.dataset.text = text;
+    a.dataset.mode = "ask";
   } else if (r.mode === "watch") {
+    a.dataset.mode = r.mode;
+    a.classList.remove("big-answer");
     const txt = r.answer === true ? "JA" : r.answer === false ? "nein" : "unklar";
     a.innerHTML = `<div class="big" style="color:${r.answer ? "var(--bad)" : "var(--muted)"}">${txt}</div>` +
       `<div class="muted">${escapeHtml(r.title)}</div>`;
   } else {
+    a.dataset.mode = r.mode;
+    a.classList.remove("big-answer");
     const parts = Object.entries(r.counts || {}).map(([l, n]) => `${n}× ${escapeHtml(l)}`);
     a.innerHTML = parts.length ? `<div class="big">${parts.join(" · ")}</div>` : `<span class="muted">Keine Objekte gefunden.</span>`;
   }
@@ -143,6 +155,12 @@ function renderAnswer(r) {
   let meta = `${r.model} · ${r.latency_ms} ms`;
   if (r.stage_ms) meta += ` (Detektion ${r.stage_ms.detect} + Attribut ${r.stage_ms.attribute})`;
   $("resultMeta").textContent = meta;
+}
+
+function flash(el) {
+  el.classList.remove("changed");
+  void el.offsetWidth; // Animation neu starten
+  el.classList.add("changed");
 }
 
 function renderWatch(r) {
@@ -290,6 +308,8 @@ function connect() {
       case "result": onResult(msg); break;
       case "stream_start":
         state.streaming = "";
+        $("answer").dataset.text = "";
+        $("answer").classList.remove("big-answer");
         $("answer").classList.remove("muted");
         $("answer").innerHTML = '<span class="cursor"></span>';
         break;
